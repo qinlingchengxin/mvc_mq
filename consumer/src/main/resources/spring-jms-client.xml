@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:jms="http://www.springframework.org/schema/jms"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context 
+                           http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/jms http://www.springframework.org/schema/jms/spring-jms.xsd">
+    <context:component-scan base-package="com.yx.jms"/>
+
+    <bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+
+        <property name="brokerURL">
+            <value>${jms.brokerURL}</value>
+        </property>
+
+        <property name="userName">
+            <value>${jms.username}</value>
+        </property>
+
+        <property name="password">
+            <value>${jms.password}</value>
+        </property>
+
+    </bean>
+
+    <!-- 队列消息源 -->
+    <bean id="queue.destination" class="org.apache.activemq.command.ActiveMQQueue">
+        <constructor-arg index="0" value="${jms.queue.name}"/>
+    </bean>
+
+    <!-- 主题消息源 -->
+    <bean id="topic.destination" class="org.apache.activemq.command.ActiveMQTopic">
+        <constructor-arg index="0" value="${jms.topic.name}"/>
+    </bean>
+
+    <bean id="counter" class="java.util.concurrent.atomic.AtomicInteger"/>
+
+    <jms:listener-container connection-factory="connectionFactory">
+        <jms:listener destination="queue.destination" ref="jmsMessageListener"/>
+        <jms:listener destination="topic.destination" ref="topicJmsMessageListener"/>
+    </jms:listener-container>
+
+    <!--默认消息处理监听器-->
+    <!-- <bean id="messageListener" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+         <constructor-arg>
+             <bean class="com.yx.DefaultMessageDelegate"></bean>
+         </constructor-arg>
+     </bean>
+
+     <bean id="defaultListenerContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer"
+           p:connectionFactory-ref="connectionFactory"
+           p:destination-ref="topic.destination"
+           p:messageListener-ref="messageListener"/>-->
+    <!--默认消息处理监听器-->
+
+
+    <!--队列消息处理监听器-->
+    <bean id="queueListenerContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer"
+          p:connectionFactory-ref="connectionFactory"
+          p:destination-ref="queue.destination"
+          p:messageListener-ref="jmsMessageListener"/>
+    <!--队列消息处理监听器-->
+
+
+    <!--主题消息处理监听器-->
+    <bean id="topicListenerContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer"
+          p:connectionFactory-ref="connectionFactory"
+          p:destination-ref="topic.destination"
+          p:messageListener-ref="topicJmsMessageListener"/>
+    <!--主题消息处理监听器-->
+</beans>
